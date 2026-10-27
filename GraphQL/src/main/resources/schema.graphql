@@ -1,26 +1,99 @@
+
+# Represents a Teaching Unit (Unité d'Enseignement)
 type UniteEnseignement {
-    code: Int
-    domaine: String
-    responsable: String
-    credits: Int
-    semestre: Int
-}
-type QueryResolver {
-    allUEs: [UniteEnseignement]
+    code: Int!
+    domaine: String!
+    responsable: String!
+    credits: Int!
+    semestre: Int!
 }
 
+# Defines the possible types of a Module
+enum TypeModule {
+    TRANSVERSAL
+    PROFESSIONNEL
+    RECHERCHE
+}
 
-type MutationResolver {
+# Represents a Module and its associated Teaching Unit
+type Module {
+    matricule: String!
+    nom: String!
+    coefficient: Int!
+    volumeHoraire: Int!
+    type: TypeModule!
+
+    # Returns the Teaching Unit associated with this Module
+    uniteEnseignement: UniteEnseignement
+}
+
+# Contains all read operations
+type Query {
+    # Returns all Teaching Units
+    allUEs: [UniteEnseignement!]!
+
+    # Finds a Teaching Unit by its unique code
+    ueByCode(code: Int!): UniteEnseignement
+
+    # Returns Teaching Units belonging to a domain
+    uesByDomaine(domaine: String!): [UniteEnseignement!]!
+
+    # Returns Teaching Units belonging to a semester
+    uesBySemestre(semestre: Int!): [UniteEnseignement!]!
+
+    # Returns all Modules
+    allModules: [Module!]!
+
+    # Finds a Module by its matricule
+    moduleByMatricule(matricule: String!): Module
+
+    # Returns Modules of a specified type
+    modulesByType(type: TypeModule!): [Module!]!
+}
+
+# Contains all write operations
+type Mutation {
+    # Creates a new Teaching Unit
     addUniteEnseignement(
         code: Int!
         domaine: String!
         responsable: String!
         credits: Int!
         semestre: Int!
-    ): Boolean
+    ): Boolean!
 
-}
-schema {
-    query: QueryResolver
-    mutation: MutationResolver
+    # Updates an existing Teaching Unit identified by its code
+    updateUniteEnseignement(
+        code: Int!
+        domaine: String!
+        responsable: String!
+        credits: Int!
+        semestre: Int!
+    ): Boolean!
+
+    # Deletes a Teaching Unit identified by its code
+    deleteUniteEnseignement(code: Int!): Boolean!
+
+    # Creates a Module linked to an existing Teaching Unit
+    addModule(
+        matricule: String!
+        nom: String!
+        coefficient: Int!
+        volumeHoraire: Int!
+        type: TypeModule!
+        codeUE: Int!
+    ): Boolean!
+
+    # Updates a Module identified by its matricule
+    updateModule(
+        matricule: String!
+        nom: String!
+        coefficient: Int!
+        volumeHoraire: Int!
+        type: TypeModule!
+        codeUE: Int!
+    ): Boolean!
+
+    # Deletes a Module identified by its matricule
+    deleteModule(matricule: String!): Boolean!
 }

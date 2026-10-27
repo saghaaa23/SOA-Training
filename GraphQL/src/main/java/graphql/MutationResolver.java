@@ -1,57 +1,134 @@
+
 package graphql;
 
-// Import the business logic class responsible for managing "UniteEnseignement" data
+// Import the business classes that handle data operations
+import business.ModuleBusiness;
 import business.UniteEnseignementBusiness;
 
-// Import the GraphQL library class used to define the root of GraphQL mutations
-import com.coxautodev.graphql.tools.GraphQLRootResolver;
+// Import the interface required for a GraphQL mutation resolver
+import com.coxautodev.graphql.tools.GraphQLMutationResolver;
 
-// Import the entity class representing a Teaching Unit (Unité d’Enseignement)
+// Import the entity classes used to create or update objects
+import entities.Module;
 import entities.UniteEnseignement;
 
-/**
- * This class defines all GraphQL mutations related to the "UniteEnseignement" entity.
- * A mutation in GraphQL is used to perform write operations (create, update, delete)
- * as opposed to queries, which are for read operations.
- */
-public class MutationResolver implements GraphQLRootResolver {
+// This class defines GraphQL mutations for adding, updating and deleting data
+public class MutationResolver implements GraphQLMutationResolver {
 
-    // Attribute used to access the business logic (service layer)
-    public UniteEnseignementBusiness helper;
+    // Helper used for Teaching Unit operations
+    private UniteEnseignementBusiness ueHelper;
 
-    /**
-     * Constructor of the resolver.
-     * It initializes the business helper that manages the teaching units.
-     */
+    // Helper used for Module operations
+    private ModuleBusiness moduleHelper;
+
+    // Constructor: initializes the business classes
     public MutationResolver() {
-        helper = new UniteEnseignementBusiness();
+        ueHelper = new UniteEnseignementBusiness();
+        moduleHelper = new ModuleBusiness();
     }
 
-    /**
-     * GraphQL Mutation: addUniteEnseignement
-     *
-     * This method allows clients to add a new "Unité d’Enseignement" to the system.
-     *
-     * When a GraphQL mutation like the following is executed:
-     *
-     * mutation {
-     *     addUniteEnseignement(
-     *         code: 101,
-     *         domaine: "Informatique",
-     *         responsable: "Dr. Smith",
-     *         credits: 4,
-     *         semestre: 2
-     *     )
-     * }
-     *
-     * GraphQL calls this Java method to create and save a new teaching unit.
-     */
-    public boolean addUniteEnseignement(int code, String domaine, String responsable, int credits, int semestre) {
-        // Create a new UniteEnseignement object with the provided parameters
-        UniteEnseignement ue = new UniteEnseignement(code, domaine, responsable, credits, semestre);
+    // ===== Mutations for Unités d'Enseignement =====
 
-        // Call the business logic method to add the new unit
-        // The helper handles the actual persistence or logic of adding the entity
-        return helper.addUniteEnseignement(ue);
+    // Adds a new Teaching Unit using the provided information
+    public boolean addUniteEnseignement(
+            int code,
+            String domaine,
+            String responsable,
+            int credits,
+            int semestre) {
+
+        // Create a new Teaching Unit object with the received arguments
+        UniteEnseignement ue = new UniteEnseignement(
+                code, domaine, responsable, credits, semestre);
+
+        // Call the business method to add the Teaching Unit
+        // Returns true if the operation succeeds
+        return ueHelper.addUniteEnseignement(ue);
+    }
+
+    // Updates an existing Teaching Unit identified by its code
+    public boolean updateUniteEnseignement(
+            int code,
+            String domaine,
+            String responsable,
+            int credits,
+            int semestre) {
+
+        // Create an object containing the new Teaching Unit information
+        UniteEnseignement updatedUE = new UniteEnseignement(
+                code, domaine, responsable, credits, semestre);
+
+        // Replace the existing Teaching Unit with the updated object
+        // Returns false if the specified code does not exist
+        return ueHelper.updateUniteEnseignement(code, updatedUE);
+    }
+
+    // Deletes a Teaching Unit identified by its code
+    public boolean deleteUniteEnseignement(int code) {
+
+        // Delegate the deletion to the business class
+        // Returns true if the Teaching Unit was found and deleted
+        return ueHelper.deleteUniteEnseignement(code);
+    }
+
+    // ===== Mutations for Modules =====
+
+    // Adds a new Module and associates it with an existing Teaching Unit
+    public boolean addModule(
+            String matricule,
+            String nom,
+            int coefficient,
+            int volumeHoraire,
+            Module.TypeModule type,
+            int codeUE) {
+
+        // Find the Teaching Unit associated with the module
+        UniteEnseignement ue = ueHelper.getUEByCode(codeUE);
+
+        // Do not add the Module if the Teaching Unit does not exist
+        if (ue == null) {
+            return false;
+        }
+
+        // Create the Module and associate it with the selected Teaching Unit
+        Module module = new Module(
+                matricule, nom, coefficient, volumeHoraire, type, ue);
+
+        // Call the business method to add the Module
+        return moduleHelper.addModule(module);
+    }
+
+    // Updates an existing Module identified by its matricule
+    public boolean updateModule(
+            String matricule,
+            String nom,
+            int coefficient,
+            int volumeHoraire,
+            Module.TypeModule type,
+            int codeUE) {
+
+        // Find the Teaching Unit to associate with the updated Module
+        UniteEnseignement ue = ueHelper.getUEByCode(codeUE);
+
+        // Stop the update if the specified Teaching Unit does not exist
+        if (ue == null) {
+            return false;
+        }
+
+        // Create a Module object containing the updated information
+        Module updatedModule = new Module(
+                matricule, nom, coefficient, volumeHoraire, type, ue);
+
+        // Replace the existing Module using its matricule
+        // Returns false if no Module with this matricule exists
+        return moduleHelper.updateModule(matricule, updatedModule);
+    }
+
+    // Deletes a Module identified by its matricule
+    public boolean deleteModule(String matricule) {
+
+        // Delegate the deletion to the business class
+        // Returns true if the Module was found and deleted
+        return moduleHelper.deleteModule(matricule);
     }
 }
